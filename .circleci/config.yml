@@ -1,3 +1,6 @@
+# CircleCI build config to test the 
+# Google Coud Platform Container Registry Orb published by CircleCI
+
 version: 2.1
 
 orbs:
@@ -8,14 +11,16 @@ jobs:
     executor: gcp-gcr/default
     steps:
       # test orb commands
-      - gcp-gcr/auth:
+      - checkout
+      - gcp-gcr/gcr-auth:
           google-project-id: citric-biplane-94023
+          google-compute-zone: us-west1-b
       - gcp-gcr/build-image:
           registry-url: us.gcr.io
           google-project-id: citric-biplane-94023
           image: sample-image
           tag: $CIRCLE_BRANCH.$CIRCLE_BUILD_NUMBER
-          path_to_Dockerfile: .
+          path-to-dockerfile: .
       - gcp-gcr/push-image:
           registry-url: us.gcr.io
           google-project-id: citric-biplane-94023
@@ -25,41 +30,24 @@ jobs:
 workflows:
   build_and_push_image:
     jobs:
-      - orb-tools/pack-and-validate-orb:
-          path: ./src/
-          workspace-path: orb-packed/
-          artifact-path: orb-packed/
-
-      - orb-tools/publish-dev-orb:
-          namespace: circleci
-          orb-name: hello-build
-          label: ${CIRCLE_BRANCH}
-          dev-token-variable: "$CIRCLECI_API_TOKEN"
-          workspace-path: orb-packed/
-          requires: [orb-tools/pack-and-validate-orb]
-
-      - orb-tools/increment-orb:
-          orb-path: orb-packed/orb.yml
-          namespace: circleci
-          orb-name: hello-build
-          segment: "patch"
-          workspace-path: orb-packed/
-          release-token-variable: "$CIRCLECI_API_TOKEN"
-          requires: [orb-tools/pack-and-validate-orb]
-          filters:
-            branches:
-              only: master
-
       # test orb commands
       - test-orb-commands:
           context: ttrahan
 
       # test orb jobs
-      - gcp-gcr/install_and_initialize_gcr:
+      - gcp-gcr/build_and_push_image:
+          requires:
+            - test-orb-commands
           context: ttrahan
           google-project-id: citric-biplane-94023
           google-compute-zone: us-west1-b
-      - gcp-gcr/use_google_image_and_initialize_gcr:
+          registry-url: us.gcr.io
+          image: sample-image
+          tag: $CIRCLE_BRANCH.$CIRCLE_BUILD_NUM
+
+      # test orb jobs with default values only
+      - gcp-gcr/build_and_push_image:
+          requires:
+            - gcp-gcr/build_and_push_image
           context: ttrahan
-          google-project-id: citric-biplane-94023
-          google-compute-zone: us-west1-b
+          image: sample-image
