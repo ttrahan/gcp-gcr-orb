@@ -85,9 +85,13 @@ commands:
             # configure Docker to use gcloud as a credential helper
             $SUDO gcloud auth configure-docker --quiet --project <<parameters.google-project-id>>
 
-            # provide circleci user access to the docker config file
-            $SUDO chown circleci:circleci /home/circleci/.docker -R
-            $SUDO chown circleci:circleci /home/circleci/.config -R
+            # if applicable, provide circleci user access to the docker config file
+            if [[ -d /home/circleci/.docker ]]; then
+              $SUDO chown circleci:circleci /home/circleci/.docker -R
+            fi
+            if [[ -d /home/circleci/.config ]]; then
+              $SUDO chown circleci:circleci /home/circleci/.config -R
+            fi
 
   build-image:
     description: Build a docker image
