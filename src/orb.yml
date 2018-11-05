@@ -7,7 +7,6 @@ description: >
   necessary dependencies for executing the jobs and commands in this orb,
   except for the following required dependencies that must be configured in
   CircleCI in order to use this orb
-  
     * GCLOUD_SERVICE_KEY - environment variable for GCP login
 
   See CircleCI documentation for instructions on storing environment variables
